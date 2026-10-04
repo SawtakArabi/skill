@@ -12,15 +12,25 @@ from urllib.parse import quote, urlencode, urlparse
 import uuid
 import wave
 
+import contextlib
+import io
+import unicodedata
+
+IMPORT_ERROR = None
+IMPORT_DIAGNOSTICS = io.StringIO()
 try:
-    import httpx
-    from openai import APIConnectionError, APIStatusError, OpenAI
-except ModuleNotFoundError:
+    with contextlib.redirect_stderr(IMPORT_DIAGNOSTICS):
+        import hashlib
+        import httpx
+        from openai import APIConnectionError, APIStatusError, OpenAI
+except Exception as exc:
+    IMPORT_ERROR = type(exc).__name__
+
+
+def dependency_hint():
     requirements = Path(__file__).resolve().parents[1] / "requirements.txt"
-    raise SystemExit(
-        "Missing Python dependencies. Install them in your Python environment:\n"
-        f"{shlex.quote(sys.executable)} -m pip install -r {shlex.quote(str(requirements))}"
-    ) from None
+    return ("Missing Python dependencies or imports failed. Install them in your Python environment:\n"
+            f"{shlex.quote(sys.executable)} -m pip install -r {shlex.quote(str(requirements))}")
 
 
 BASE_URL = "https://api.sawtakarabi.ai/v1"
@@ -38,14 +48,84 @@ def make_client():
     return OpenAI(api_key=key, base_url=base, max_retries=0, timeout=180.0)
 
 
+def dialects():
+    path = Path(__file__).resolve().parents[1] / "references/dialects.json"
+    return json.loads(path.read_text(encoding="utf-8"))["dialects"]
+
+
+def normalized_name(value):
+    return "".join(c for c in unicodedata.normalize("NFKD", value.casefold()) if c.isalnum())
+
+
+def resolve_dialect(value):
+    entries = dialects()
+    if any(row["code"] == value for row in entries):
+        return value
+    matches = [row["code"] for row in entries if any(
+        normalized_name(value) == normalized_name(name)
+        for name in [row["code"], row["name"], row["name_ar"], *row["aliases"]])]
+    if len(matches) == 1:
+        return matches[0]
+    if matches:
+        raise ValueError("Ambiguous dialect; use one of these codes: " + ", ".join(matches))
+    # Allow exact labels observed in a newer live catalog without inventing aliases.
+    if value.isascii() and value.islower() and "-" in value and all(c.isalnum() or c == "-" for c in value):
+        return value
+    raise ValueError("Unknown dialect. Run 'dialects --search <name>' to find a code.")
+
+
 def list_voices(client, args):
     query = {"limit": args.limit, "sort": "most_liked"}
-    for name in ("dialect", "gender", "search", "after"):
+    for name in ("dialect", "gender", "search", "after", "use_case", "sharing_status"):
         value = getattr(args, name)
         if value:
-            query[name] = value
-    # Sawtak expects repeated dialect= values, not the SDK's dialect[]= convention.
-    return client.get("/voices?" + urlencode(query, doseq=True), cast_to=object)
+            query[name] = [resolve_dialect(item) for item in value] if name == "dialect" else value
+    result = client.get("/voices?" + urlencode(query, doseq=True), cast_to=object)
+    if args.details:
+        return result
+    return {**result, "data": [
+        {"id": voice.get("id"), "name": voice.get("name"),
+         "dialect": voice.get("labels", {}).get("dialect"),
+         "gender": voice.get("labels", {}).get("gender"), "status": voice.get("status")}
+        for voice in result["data"]]}
+
+
+def doctor():
+    checks = {"python": "ok" if sys.version_info >= (3, 10) else "unsupported",
+              "imports": "failed" if IMPORT_ERROR else "warnings" if IMPORT_DIAGNOSTICS.getvalue() else "ok",
+              "credentials": "present" if os.environ.get("SAWTAK_API_KEY", "").strip() else "missing",
+              "connectivity": "not_checked", "voice_access": "not_checked", "speech_access": "unverified"}
+    try:
+        hashlib.sha256(b"diagnostic").hexdigest()
+        hashlib.md5(b"diagnostic", usedforsecurity=False).hexdigest()
+        checks["hashing"] = "ok"
+    except Exception:
+        checks["hashing"] = "failed"
+    if IMPORT_ERROR:
+        return {"checks": checks, "hint": dependency_hint(), "ok": False}
+    if checks["credentials"] == "present":
+        try:
+            with make_client() as client:
+                client = client.with_options(timeout=10.0)
+                try:
+                    client.get("/voices?limit=1", cast_to=object)
+                    checks.update(connectivity="ok", voice_access="ok")
+                except APIStatusError as exc:
+                    checks.update(connectivity="ok", voice_access=f"http_{exc.status_code}")
+                try:
+                    account = client.get("/me", cast_to=object)
+                    scopes = account.get("key", {}).get("scopes")
+                    if isinstance(scopes, list):
+                        checks["speech_access"] = "ok" if not scopes or "tts" in scopes or "*" in scopes else "denied"
+                except APIStatusError:
+                    pass  # Account inspection permission is not required for synthesis.
+        except (APIConnectionError, httpx.TransportError):
+            checks["connectivity"] = "failed"
+        except ValueError:
+            checks["connectivity"] = "invalid_base_url"
+    return {"checks": checks,
+            "ok": all(checks[k] == "ok" for k in ("python", "imports", "hashing", "connectivity", "voice_access", "speech_access")),
+            "hint": "No speech generated. Unverified speech access requires an actual request to confirm; doctor never makes one."}
 
 
 def generate(client, args):
@@ -156,11 +236,17 @@ def parser():
     cli = argparse.ArgumentParser(description=__doc__)
     sub = cli.add_subparsers(dest="command", required=True)
     voices = sub.add_parser("voices", help="List voices; follow next_cursor with --after")
-    voices.add_argument("--dialect", action="append", help="Exact catalog dialect label; repeat to include several")
+    voices.add_argument("--dialect", action="append", help="Dialect code, name, or alias; repeat to include several")
     voices.add_argument("--gender", choices=["male", "female", "neutral"])
     voices.add_argument("--search", help="Search voice names (not dialect names)")
     voices.add_argument("--limit", type=int, default=25, choices=range(1, 101), metavar="1..100")
     voices.add_argument("--after", help="Opaque next_cursor from the previous page")
+    voices.add_argument("--use-case", help="Catalog use-case label, such as advertisement or narration")
+    voices.add_argument("--sharing-status", choices=["public", "private"])
+    voices.add_argument("--details", action="store_true", help="Include descriptions, preview text, and all catalog fields")
+    labels = sub.add_parser("dialects", help="List bundled dialect names/codes; no API key needed")
+    labels.add_argument("--search", default="", help="Filter names, codes, and aliases")
+    sub.add_parser("doctor", help="Check local setup and read-only API access; never generates speech")
     speech = sub.add_parser("generate", help="Generate narration; consumes Sawtak credits")
     speech.add_argument("--voice", required=True, help="Ready voice ID from the catalog")
     speech.add_argument("--text-file", type=Path, required=True, help="UTF-8 narration script")
@@ -174,6 +260,19 @@ def parser():
 
 def main(argv=None):
     args = parser().parse_args(argv)
+    if args.command == "dialects":
+        term = normalized_name(args.search)
+        rows = [row for row in dialects() if any(term in normalized_name(name) for name in
+                [row["code"], row["name"], row["name_ar"], *row["aliases"]])]
+        print(json.dumps({"data": rows, "note": "Bundled dialect labels; use voices to check live availability. Filters match exact codes, not whole regions."}, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "doctor":
+        result = doctor()
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["ok"] else 1
+    if IMPORT_ERROR:
+        print(dependency_hint(), file=sys.stderr)
+        return 1
     try:
         with make_client() as client:
             result = {"voices": list_voices, "generate": generate, "inspect": inspect_operation}[args.command](client, args)

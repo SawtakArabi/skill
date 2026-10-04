@@ -193,3 +193,68 @@ def test_keyboard_interrupt_keeps_audio_and_ids(args):
     assert saved["state"] == "incomplete"
     with wave.open(saved["partial_path"]) as wav:
         assert wav.getnframes() == 1
+
+
+def test_alias_and_filters_compact_and_details():
+    seen = []
+    voice = {"id": "v", "name": "Nabil", "status": "ready", "labels": {"dialect": "ye-sanaani", "gender": "male"}, "description": "long", "preview_text": "long"}
+    def handler(request):
+        seen.append(request)
+        assert request.url.params["dialect"] == "ye-sanaani"
+        assert request.url.params["use_case"] == "advertisement"
+        assert request.url.params["sharing_status"] == "public"
+        return httpx.Response(200, json={"data": [voice], "has_more": True, "next_cursor": "next"})
+    args = helper.parser().parse_args(["voices", "--dialect", "Sannani", "--use-case", "advertisement", "--sharing-status", "public"])
+    with client(handler) as sdk:
+        result = helper.list_voices(sdk, args)
+        assert result["data"] == [{"id": "v", "name": "Nabil", "status": "ready", "dialect": "ye-sanaani", "gender": "male"}]
+        assert result["next_cursor"] == "next"
+        args.details = True
+        assert helper.list_voices(sdk, args)["data"] == [voice]
+
+
+@pytest.mark.parametrize("alias", ["Sannani", "Sanaani", "Sana’a", "Sana'a", "Yemeni Sana'ani", "ye-sanaani"])
+def test_sanaani_aliases(alias):
+    assert helper.resolve_dialect(alias) == "ye-sanaani"
+
+
+def test_offline_commands_without_dependencies_or_key(monkeypatch):
+    monkeypatch.delenv("SAWTAK_API_KEY", raising=False)
+    for command in (["dialects", "--search", "Sannani"], ["doctor"]):
+        result = subprocess.run([sys.executable, "-S", str(SCRIPT), *command], capture_output=True, text=True)
+        body = json.loads(result.stdout)
+        assert not result.stderr
+        if command[0] == "dialects":
+            assert body["data"][0]["code"] == "ye-sanaani"
+            assert result.returncode == 0
+        else:
+            assert body["checks"]["imports"] == "failed"
+            assert body["checks"]["credentials"] == "missing"
+            assert result.returncode == 1
+
+
+@pytest.mark.parametrize("me_status,scopes,expected", [(200, ["tts", "voices"], "ok"), (403, [], "unverified"), (200, ["voices"], "denied")])
+def test_doctor_only_reads_and_hides_account_data(monkeypatch, me_status, scopes, expected):
+    monkeypatch.setenv("SAWTAK_API_KEY", "secret-test-value")
+    def handler(request):
+        assert request.method == "GET"
+        if request.url.path == "/v1/voices":
+            return httpx.Response(200, json={"data": []})
+        assert request.url.path == "/v1/me"
+        return httpx.Response(me_status, json={"email": "private@example.com", "key": {"scopes": scopes}})
+    monkeypatch.setattr(helper, "make_client", lambda: client(handler))
+    result = helper.doctor()
+    assert result["checks"]["speech_access"] == expected
+    assert result["ok"] == (expected == "ok")
+    assert "secret-test-value" not in json.dumps(result)
+    assert "private@example.com" not in json.dumps(result)
+
+
+def test_doctor_network_error(monkeypatch):
+    monkeypatch.setenv("SAWTAK_API_KEY", "test")
+    def handler(request):
+        raise httpx.ConnectError("private diagnostics")
+    monkeypatch.setattr(helper, "make_client", lambda: client(handler))
+    result = helper.doctor()
+    assert result["checks"]["connectivity"] == "failed"
+    assert "private diagnostics" not in json.dumps(result)

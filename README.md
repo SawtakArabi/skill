@@ -16,6 +16,8 @@ Create an API key in your [Sawtak dashboard](https://sawtakarabi.ai), then set `
 
 Install the Python packages in [requirements.txt](skills/arabic-voiceover/requirements.txt). Your agent can do this when setting up the skill.
 
+To check setup without generating audio, ask your agent to run the skill’s `doctor` command.
+
 ## Usage
 
 Ask your agent:

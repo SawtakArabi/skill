@@ -1,0 +1,808 @@
+{
+  "source": "Sawtak platform frontend/scripts/shipped-voices.json (2026-10-04); bundled labels, not live availability",
+  "dialects": [
+    {
+      "code": "ae",
+      "name": "Emirati",
+      "name_ar": "الإماراتية",
+      "aliases": []
+    },
+    {
+      "code": "ae-abudhabi",
+      "name": "Emirati Abu Dhabi",
+      "name_ar": "الإماراتية الظبيانية",
+      "aliases": [
+        "abudhabi"
+      ]
+    },
+    {
+      "code": "ae-alain",
+      "name": "Emirati Alain",
+      "name_ar": "إماراتية ظبيانية — العين",
+      "aliases": [
+        "alain"
+      ]
+    },
+    {
+      "code": "ae-dubai",
+      "name": "Emirati Dubai",
+      "name_ar": "إماراتية ساحلية — دبي",
+      "aliases": [
+        "dubai"
+      ]
+    },
+    {
+      "code": "ae-sharjah",
+      "name": "Emirati Sharjah",
+      "name_ar": "إماراتية ساحلية — الشارقة",
+      "aliases": [
+        "sharjah"
+      ]
+    },
+    {
+      "code": "bh",
+      "name": "Bahraini",
+      "name_ar": "البحرينية",
+      "aliases": []
+    },
+    {
+      "code": "bh-manama",
+      "name": "Bahraini Manama",
+      "name_ar": "البحرينية المنامية",
+      "aliases": [
+        "manama"
+      ]
+    },
+    {
+      "code": "dz",
+      "name": "Algerian",
+      "name_ar": "الجزائرية",
+      "aliases": []
+    },
+    {
+      "code": "dz-capital",
+      "name": "Algiers Algerian",
+      "name_ar": "الجزائرية العاصمية",
+      "aliases": [
+        "capital"
+      ]
+    },
+    {
+      "code": "dz-oran",
+      "name": "Oran Algerian",
+      "name_ar": "الجزائرية الوهرانية",
+      "aliases": [
+        "oran"
+      ]
+    },
+    {
+      "code": "dz-sahara",
+      "name": "Saharan Algerian",
+      "name_ar": "الجزائرية الصحراوية",
+      "aliases": [
+        "sahara"
+      ]
+    },
+    {
+      "code": "eg",
+      "name": "Egyptian",
+      "name_ar": "المصرية",
+      "aliases": []
+    },
+    {
+      "code": "eg-alexandrian",
+      "name": "Egyptian Alexandrian",
+      "name_ar": "المصرية الإسكندرانية",
+      "aliases": [
+        "alexandrian"
+      ]
+    },
+    {
+      "code": "eg-beheira",
+      "name": "Egyptian Beheira",
+      "name_ar": "المصرية البحراوية",
+      "aliases": [
+        "beheira"
+      ]
+    },
+    {
+      "code": "eg-cairene",
+      "name": "Egyptian Cairene",
+      "name_ar": "المصرية القاهرية",
+      "aliases": [
+        "cairene"
+      ]
+    },
+    {
+      "code": "eg-fayoum",
+      "name": "Egyptian Fayoumi",
+      "name_ar": "المصرية الفيومية",
+      "aliases": [
+        "fayoum"
+      ]
+    },
+    {
+      "code": "eg-portsaid",
+      "name": "Egyptian Portsaid",
+      "name_ar": "مصرية بورسعيدية",
+      "aliases": [
+        "portsaid"
+      ]
+    },
+    {
+      "code": "eg-saidi",
+      "name": "Egyptian Sa'idi",
+      "name_ar": "المصرية الصعيدية",
+      "aliases": [
+        "saidi"
+      ]
+    },
+    {
+      "code": "iq",
+      "name": "Iraqi",
+      "name_ar": "العراقية",
+      "aliases": []
+    },
+    {
+      "code": "iq-baghdadi",
+      "name": "Iraqi Baghdadi",
+      "name_ar": "العراقية البغدادية",
+      "aliases": [
+        "baghdadi"
+      ]
+    },
+    {
+      "code": "iq-mosul",
+      "name": "Iraqi Moslawi",
+      "name_ar": "العراقية الموصلية",
+      "aliases": [
+        "mosul"
+      ]
+    },
+    {
+      "code": "iq-najaf",
+      "name": "Iraqi Najafi",
+      "name_ar": "العراقية النجفية",
+      "aliases": [
+        "najaf"
+      ]
+    },
+    {
+      "code": "iq-south",
+      "name": "Iraqi South",
+      "name_ar": "عراقية جنوبية",
+      "aliases": [
+        "south"
+      ]
+    },
+    {
+      "code": "jo",
+      "name": "Jordanian",
+      "name_ar": "الأردنية",
+      "aliases": []
+    },
+    {
+      "code": "jo-ajloun",
+      "name": "Jordanian Ajloun",
+      "name_ar": "أردنية عجلونية",
+      "aliases": [
+        "ajloun"
+      ]
+    },
+    {
+      "code": "jo-ammani",
+      "name": "Jordanian Ammani",
+      "name_ar": "الأردنية العمّانية",
+      "aliases": [
+        "ammani"
+      ]
+    },
+    {
+      "code": "jo-balqa",
+      "name": "Jordanian Balqawi",
+      "name_ar": "الأردنية البلقاوية",
+      "aliases": [
+        "balqa"
+      ]
+    },
+    {
+      "code": "jo-ghor",
+      "name": "Jordanian Ghor",
+      "name_ar": "أردنية غورية",
+      "aliases": [
+        "ghor"
+      ]
+    },
+    {
+      "code": "jo-irbid",
+      "name": "Jordanian Irbidi",
+      "name_ar": "الأردنية الإربدية",
+      "aliases": [
+        "irbid"
+      ]
+    },
+    {
+      "code": "jo-karak",
+      "name": "Jordanian Karaki",
+      "name_ar": "الأردنية الكركية",
+      "aliases": [
+        "karak"
+      ]
+    },
+    {
+      "code": "jo-maan",
+      "name": "Jordanian Ma'ani",
+      "name_ar": "الأردنية المعانية",
+      "aliases": [
+        "maan"
+      ]
+    },
+    {
+      "code": "jo-mafraq",
+      "name": "Jordanian Mafraqi",
+      "name_ar": "الأردنية المفرقية",
+      "aliases": [
+        "mafraq"
+      ]
+    },
+    {
+      "code": "jo-north",
+      "name": "Jordanian North",
+      "name_ar": "أردنية شمالية",
+      "aliases": [
+        "north"
+      ]
+    },
+    {
+      "code": "jo-south",
+      "name": "Jordanian South",
+      "name_ar": "أردنية جنوبية",
+      "aliases": [
+        "south"
+      ]
+    },
+    {
+      "code": "jo-zarqa",
+      "name": "Jordanian Zarqawi",
+      "name_ar": "الأردنية الزرقاوية",
+      "aliases": [
+        "zarqa"
+      ]
+    },
+    {
+      "code": "kw",
+      "name": "Kuwaiti",
+      "name_ar": "الكويتية",
+      "aliases": []
+    },
+    {
+      "code": "lb",
+      "name": "Lebanese",
+      "name_ar": "اللبنانية",
+      "aliases": []
+    },
+    {
+      "code": "lb-beiruti",
+      "name": "Lebanese Beiruti",
+      "name_ar": "اللبنانية البيروتية",
+      "aliases": [
+        "beiruti"
+      ]
+    },
+    {
+      "code": "lb-south",
+      "name": "Southern Lebanese",
+      "name_ar": "اللبنانية الجنوبية",
+      "aliases": [
+        "south"
+      ]
+    },
+    {
+      "code": "lb-tripoli",
+      "name": "Lebanese Tripolitan",
+      "name_ar": "اللبنانية الطرابلسية",
+      "aliases": [
+        "tripoli"
+      ]
+    },
+    {
+      "code": "ly",
+      "name": "Libyan",
+      "name_ar": "الليبية",
+      "aliases": []
+    },
+    {
+      "code": "ly-barqa",
+      "name": "Libyan Cyrenaican",
+      "name_ar": "الليبية البرقاوية",
+      "aliases": [
+        "barqa"
+      ]
+    },
+    {
+      "code": "ly-misrata",
+      "name": "Libyan Misratan",
+      "name_ar": "الليبية المصراتية",
+      "aliases": [
+        "misrata"
+      ]
+    },
+    {
+      "code": "ly-tripoli",
+      "name": "Libyan Tripolitanian",
+      "name_ar": "الليبية الطرابلسية",
+      "aliases": [
+        "tripoli"
+      ]
+    },
+    {
+      "code": "ma",
+      "name": "Moroccan",
+      "name_ar": "المغربية",
+      "aliases": []
+    },
+    {
+      "code": "ma-casablanca",
+      "name": "Moroccan Casablancan",
+      "name_ar": "المغربية البيضاوية",
+      "aliases": [
+        "casablanca"
+      ]
+    },
+    {
+      "code": "ma-north",
+      "name": "Northern Moroccan",
+      "name_ar": "المغربية الشمالية",
+      "aliases": [
+        "north"
+      ]
+    },
+    {
+      "code": "ma-rabat",
+      "name": "Moroccan Rabati",
+      "name_ar": "المغربية الرباطية",
+      "aliases": [
+        "rabat"
+      ]
+    },
+    {
+      "code": "msa",
+      "name": "Modern Standard Arabic",
+      "name_ar": "العربية الفصحى",
+      "aliases": [
+        "Fusha",
+        "Fus-ha",
+        "Standard Arabic"
+      ]
+    },
+    {
+      "code": "om",
+      "name": "Omani",
+      "name_ar": "العمانية",
+      "aliases": []
+    },
+    {
+      "code": "om-batinah",
+      "name": "Omani Batinah",
+      "name_ar": "العمانية الباطنية",
+      "aliases": [
+        "batinah"
+      ]
+    },
+    {
+      "code": "om-inland",
+      "name": "Inland Omani",
+      "name_ar": "العمانية الداخلية",
+      "aliases": [
+        "inland"
+      ]
+    },
+    {
+      "code": "om-muscat",
+      "name": "Omani Muscat",
+      "name_ar": "العمانية المسقطية",
+      "aliases": [
+        "muscat"
+      ]
+    },
+    {
+      "code": "pal",
+      "name": "Palestinian",
+      "name_ar": "الفلسطينية",
+      "aliases": []
+    },
+    {
+      "code": "ps-central",
+      "name": "Central Palestinian",
+      "name_ar": "الفلسطينية الوسطى",
+      "aliases": [
+        "central"
+      ]
+    },
+    {
+      "code": "ps-galilee",
+      "name": "Galilean Palestinian",
+      "name_ar": "الفلسطينية الجليلية",
+      "aliases": [
+        "galilee"
+      ]
+    },
+    {
+      "code": "ps-gaza",
+      "name": "Gazan Palestinian",
+      "name_ar": "الفلسطينية الغزّاوية",
+      "aliases": [
+        "gaza"
+      ]
+    },
+    {
+      "code": "ps-hebron",
+      "name": "Hebron Palestinian",
+      "name_ar": "الفلسطينية الخليلية",
+      "aliases": [
+        "hebron"
+      ]
+    },
+    {
+      "code": "ps-nablus",
+      "name": "Nabulsi Palestinian",
+      "name_ar": "الفلسطينية النابلسية",
+      "aliases": [
+        "nablus"
+      ]
+    },
+    {
+      "code": "ps-north",
+      "name": "ps North",
+      "name_ar": "فلسطينية شمالية",
+      "aliases": [
+        "north"
+      ]
+    },
+    {
+      "code": "ps-south",
+      "name": "ps South",
+      "name_ar": "فلسطينية جنوبية",
+      "aliases": [
+        "south"
+      ]
+    },
+    {
+      "code": "ps-westbank",
+      "name": "West Bank Palestinian",
+      "name_ar": "الفلسطينية الضفّاوية",
+      "aliases": [
+        "westbank"
+      ]
+    },
+    {
+      "code": "qa",
+      "name": "Qatari",
+      "name_ar": "القطرية",
+      "aliases": []
+    },
+    {
+      "code": "sa",
+      "name": "Saudi",
+      "name_ar": "السعودية",
+      "aliases": []
+    },
+    {
+      "code": "sa-asiri",
+      "name": "Saudi Asiri",
+      "name_ar": "السعودية العسيرية",
+      "aliases": [
+        "asiri"
+      ]
+    },
+    {
+      "code": "sa-eastern",
+      "name": "Eastern Saudi",
+      "name_ar": "السعودية الشرقية",
+      "aliases": [
+        "eastern"
+      ]
+    },
+    {
+      "code": "sa-hail",
+      "name": "Saudi Hail",
+      "name_ar": "سعودية حائلية",
+      "aliases": [
+        "hail"
+      ]
+    },
+    {
+      "code": "sa-jawf",
+      "name": "Saudi Jawf",
+      "name_ar": "سعودية جوفية",
+      "aliases": [
+        "jawf"
+      ]
+    },
+    {
+      "code": "sa-najran",
+      "name": "Saudi Najran",
+      "name_ar": "سعودية نجرانية",
+      "aliases": [
+        "najran"
+      ]
+    },
+    {
+      "code": "sa-north",
+      "name": "Saudi North",
+      "name_ar": "سعودية شمالية",
+      "aliases": [
+        "north"
+      ]
+    },
+    {
+      "code": "sa-qassim",
+      "name": "Saudi Qassimi",
+      "name_ar": "السعودية القصيمية",
+      "aliases": [
+        "qassim"
+      ]
+    },
+    {
+      "code": "sa-south",
+      "name": "Southern Saudi",
+      "name_ar": "السعودية الجنوبية",
+      "aliases": [
+        "south"
+      ]
+    },
+    {
+      "code": "saudi-hijazi",
+      "name": "saudi Hijazi",
+      "name_ar": "السعودية الحجازية",
+      "aliases": [
+        "hijazi"
+      ]
+    },
+    {
+      "code": "saudi-najdi",
+      "name": "saudi Najdi",
+      "name_ar": "السعودية النجدية",
+      "aliases": [
+        "najdi"
+      ]
+    },
+    {
+      "code": "sd",
+      "name": "Sudanese",
+      "name_ar": "السودانية",
+      "aliases": []
+    },
+    {
+      "code": "sd-central",
+      "name": "Sudanese Central",
+      "name_ar": "سودانية وسطى",
+      "aliases": [
+        "central"
+      ]
+    },
+    {
+      "code": "sd-darfur",
+      "name": "Sudanese Darfur",
+      "name_ar": "سودانية دارفورية",
+      "aliases": [
+        "darfur"
+      ]
+    },
+    {
+      "code": "sd-khartoum",
+      "name": "Sudanese Khartoum",
+      "name_ar": "السودانية الخرطومية",
+      "aliases": [
+        "khartoum"
+      ]
+    },
+    {
+      "code": "sy",
+      "name": "Syrian",
+      "name_ar": "السورية",
+      "aliases": []
+    },
+    {
+      "code": "sy-aleppo",
+      "name": "Syrian Aleppine",
+      "name_ar": "السورية الحلبية",
+      "aliases": [
+        "aleppo"
+      ]
+    },
+    {
+      "code": "sy-damascene",
+      "name": "Syrian Damascene",
+      "name_ar": "السورية الدمشقية",
+      "aliases": [
+        "damascene"
+      ]
+    },
+    {
+      "code": "sy-hauran",
+      "name": "Syrian Hauran",
+      "name_ar": "سورية حورانية",
+      "aliases": [
+        "hauran"
+      ]
+    },
+    {
+      "code": "sy-homs",
+      "name": "Syrian Homsi",
+      "name_ar": "السورية الحمصية",
+      "aliases": [
+        "homs"
+      ]
+    },
+    {
+      "code": "sy-idlib",
+      "name": "Syrian Idlib",
+      "name_ar": "سورية إدلبية",
+      "aliases": [
+        "idlib"
+      ]
+    },
+    {
+      "code": "sy-jazira",
+      "name": "Syrian Jazira",
+      "name_ar": "سورية جزراوية",
+      "aliases": [
+        "jazira"
+      ]
+    },
+    {
+      "code": "sy-north",
+      "name": "Northern Syrian",
+      "name_ar": "السورية الشمالية",
+      "aliases": [
+        "north"
+      ]
+    },
+    {
+      "code": "sy-quneitra",
+      "name": "Syrian Quneitra",
+      "name_ar": "سورية قنيطرية",
+      "aliases": [
+        "quneitra"
+      ]
+    },
+    {
+      "code": "sy-suwayda",
+      "name": "Syrian Suwaydawi",
+      "name_ar": "السورية السويداوية",
+      "aliases": [
+        "suwayda"
+      ]
+    },
+    {
+      "code": "tn",
+      "name": "Tunisian",
+      "name_ar": "التونسية",
+      "aliases": []
+    },
+    {
+      "code": "tn-capital",
+      "name": "Tunisian Capital",
+      "name_ar": "التونسية العاصمية",
+      "aliases": [
+        "capital"
+      ]
+    },
+    {
+      "code": "tn-coastal",
+      "name": "Tunisian Coastal",
+      "name_ar": "تونسية ساحلية",
+      "aliases": [
+        "coastal"
+      ]
+    },
+    {
+      "code": "tn-inland",
+      "name": "Inland Tunisian",
+      "name_ar": "التونسية الداخلية",
+      "aliases": [
+        "inland"
+      ]
+    },
+    {
+      "code": "tn-kairouan",
+      "name": "Tunisian Kairouan",
+      "name_ar": "تونسية قيروانية",
+      "aliases": [
+        "kairouan"
+      ]
+    },
+    {
+      "code": "tn-sfax",
+      "name": "Tunisian Sfax",
+      "name_ar": "تونسية صفاقسية",
+      "aliases": [
+        "sfax"
+      ]
+    },
+    {
+      "code": "tn-south",
+      "name": "Tunisian South",
+      "name_ar": "تونسية جنوبية",
+      "aliases": [
+        "south"
+      ]
+    },
+    {
+      "code": "ye",
+      "name": "Yemeni",
+      "name_ar": "اليمنية",
+      "aliases": []
+    },
+    {
+      "code": "ye-adani",
+      "name": "Yemeni Adeni",
+      "name_ar": "اليمنية العدنية",
+      "aliases": [
+        "adani"
+      ]
+    },
+    {
+      "code": "ye-north",
+      "name": "Yemeni North",
+      "name_ar": "يمنية شمالية",
+      "aliases": [
+        "north"
+      ]
+    },
+    {
+      "code": "ye-sanaani",
+      "name": "Yemeni Sana'ani",
+      "name_ar": "اليمنية الصنعانية",
+      "aliases": [
+        "Sanaani",
+        "Sannani",
+        "Sana’a",
+        "Sana'a",
+        "Sana'ani",
+        "sanaani"
+      ]
+    },
+    {
+      "code": "ye-socotra",
+      "name": "Yemeni Socotra",
+      "name_ar": "يمنية سقطرية",
+      "aliases": [
+        "socotra"
+      ]
+    },
+    {
+      "code": "ye-south",
+      "name": "Southern Yemeni",
+      "name_ar": "اليمنية الجنوبية",
+      "aliases": [
+        "south"
+      ]
+    },
+    {
+      "code": "ye-taiz",
+      "name": "Yemeni Ta'izzi",
+      "name_ar": "اليمنية التعزية",
+      "aliases": [
+        "taiz"
+      ]
+    },
+    {
+      "code": "ye-tihami",
+      "name": "Yemeni Tihami",
+      "name_ar": "يمنية تهامية",
+      "aliases": [
+        "tihami"
+      ]
+    },
+    {
+      "code": "ye-yafai",
+      "name": "Yemeni Yafa'i",
+      "name_ar": "اليمنية اليافعية",
+      "aliases": [
+        "yafai"
+      ]
+    }
+  ]
+}

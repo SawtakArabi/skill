@@ -4,7 +4,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 root = Path(__file__).resolve().parents[1]
 skill = root / "skills/arabic-voiceover"
-files = ["SKILL.md", "requirements.txt", "scripts/generate.py", "references/video-workflow.md", "agents/openai.yaml"]
+files = ["SKILL.md", "requirements.txt", "scripts/generate.py", "references/video-workflow.md", "references/dialects.json", "agents/openai.yaml"]
 destination = root / "dist/arabic-voiceover.zip"
 destination.parent.mkdir(exist_ok=True)
 with ZipFile(destination, "w", ZIP_DEFLATED) as archive:

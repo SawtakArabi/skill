@@ -17,3 +17,9 @@ installer, speech engine, or video renderer.
   generated media on the user's designated processing host when one is specified.
 - Distinguish SDK/mock tests, live API tests, listening checks, automatic agent
   selection, and hosted Claude execution. Do not claim one establishes another.
+
+- `references/dialects.json` reuses platform `frontend/scripts/shipped-voices.json`
+  labels, with skill aliases; it is a snapshot, not live voice availability. Include
+  it in the ZIP. Preserve pagination in compact voice output.
+- `doctor` must work with missing SDK dependencies and credentials, never synthesize,
+  and never print API keys, account details, or raw import diagnostics.
