@@ -1,0 +1,17 @@
+# Maintaining Sawtak Skills
+
+This public repository contains portable agent skills for Sawtak Arabi. Keep the
+skill self-contained under `skills/arabic-voiceover`. Reuse the official OpenAI
+Python SDK and standard Agent Skills packaging. Do not create another SDK,
+installer, speech engine, or video renderer.
+
+- The speech helper connects to Sawtak, not OpenAI. Keep automatic paid-request
+  retries disabled. Do not overwrite completed audio.
+- Never commit keys, private account metadata, generated media, or environments.
+- Keep `scripts/package.py`'s file allowlist current when adding skill resources.
+- Run `python3 -m pytest tests -q` after client changes and build the ZIP with
+  `python3 scripts/package.py`. Run these manually; no CI test workflow is needed.
+- Test live synthesis only with an authorized account and small script. Keep
+  generated media on the user's designated processing host when one is specified.
+- Distinguish SDK/mock tests, live API tests, listening checks, automatic agent
+  selection, and hosted Claude execution. Do not claim one establishes another.

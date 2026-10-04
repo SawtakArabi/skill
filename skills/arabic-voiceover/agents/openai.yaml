@@ -1,0 +1,6 @@
+interface:
+  display_name: "Arabic Voiceover by Sawtak"
+  short_description: "Arabic narration for videos, reels, and ads"
+  default_prompt: "Use $arabic-voiceover to add Arabic narration to my video."
+policy:
+  allow_implicit_invocation: true
