@@ -7,6 +7,8 @@ description: Generate Arabic voiceovers with Sawtak Arabi for videos, reels, ads
 
 Produce Arabic narration through Sawtak's hosted API and use the resulting audio in the user's requested deliverable. Generation uses the user's Sawtak balance. The skill itself is free.
 
+Official documentation: [Sawtak docs](https://sawtakarabi.ai/docs), [Text to speech](https://sawtakarabi.ai/docs/text-to-speech), and [Voices](https://sawtakarabi.ai/docs/voices). Consult the relevant guide for supported API fields and behavior.
+
 ## Setup
 
 Resolve all bundled paths relative to this SKILL.md, regardless of the project's working directory. Requires Python 3.10+ and the official OpenAI Python SDK. Use an existing compatible Python environment, or install `requirements.txt` into a virtual environment using `python3 -m pip install -r <skill-dir>/requirements.txt`. Do not install models or audio processing frameworks.
@@ -17,7 +19,7 @@ Run `python3 <skill-dir>/scripts/generate.py doctor` to diagnose setup without p
 
 ## Choose the narration
 
-- Reply in the conversation’s language unless asked otherwise. Arabic narration does not require an Arabic status report.
+- Reply in the language of the user’s prompt unless they explicitly request another reply language. If the user asks in English, reply in English—even when the requested narration is Arabic. Keep explanations, progress updates, and the final response in that reply language; write the narration in the requested language and dialect.
 - Preserve a supplied script and the requested dialect. For new scripts, write in the audience's dialect; do not silently convert Egyptian or Gulf copy to formal Arabic.
 - If dialect is unspecified and cannot be inferred, clarify it before generation. Voice metadata is a selection aid, not proof of pronunciation quality.
 - List candidates with `python3 <skill-dir>/scripts/generate.py voices --limit 25`, adding `--gender female` or `--gender male` when requested. Stop when a suitable ready voice is found; follow `next_cursor` with `--after` only if more candidates are needed.
@@ -32,12 +34,13 @@ Write narration into a UTF-8 text file, then run:
 
 ```bash
 python3 <skill-dir>/scripts/generate.py generate \
-  --voice <catalog-voice-id> --text-file scene-01.txt --output scene-01.wav
+  --voice <catalog-voice-id> --text-file scene-01.txt --output scene-01.wav \
+  --enhance-pronunciation
 ```
 
 The helper uses the official OpenAI SDK against Sawtak, receives 24 kHz mono 16-bit PCM, and uses Python's `wave` module to create a finalized WAV. It returns the absolute audio path, measured duration, voice, and request identifiers as JSON. It never overwrites an existing recording. Reuse successful files instead of regenerating them.
 
-For long work or an uncertain voice choice, start with a short representative passage; reuse it in the final narration where practical. Do not require a separate paid preview for every short clip. Split longer scripts at scene/sentence boundaries (API limit: 10,000 characters per request, 400 per word). Generate sequentially, keeping successful scenes. Do not add unsupported emotion tags, SSML, speed parameters, or word timestamp claims. Pronunciation enhancement is opt-in with `--enhance-pronunciation`; do not assume it improves dialectal text.
+For long work or an uncertain voice choice, start with a short representative passage; reuse it in the final narration where practical. Do not require a separate paid preview for every short clip. Split longer scripts at scene/sentence boundaries (API limit: 10,000 characters per request, 400 per word). Generate sequentially, keeping successful scenes. Do not add unsupported emotion tags, SSML, speed parameters, or word timestamp claims. Use `--enhance-pronunciation` for narration unless the user asks to disable it. The helper sends `enhance_pronunciation: true` in the API request (`extra_body` with the OpenAI SDK). As described in the [text-to-speech docs](https://sawtakarabi.ai/docs/text-to-speech), this applies dialect-conditioned Arabic diacritization (tashkeel) before synthesis while preserving existing marks. It is separate from text normalization, which runs by default. The API and helper default to `false` when the flag is omitted, so include the flag explicitly. Do not use the retired `apply_tashkeel` or `tashkeel` fields, and do not claim pronunciation quality was verified without a listening review.
 
 The helper manages request identifiers automatically and saves them with voice, settings, output path, and local completion state in `scene-01.json`. It emits the `idempotency_key` before submission and the `operation_id` (the server's `X-Request-Id`) immediately after receiving headers. Do not ask users to choose these IDs or include them in routine success summaries.
 
