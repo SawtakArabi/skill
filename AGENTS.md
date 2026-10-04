@@ -23,3 +23,7 @@ installer, speech engine, or video renderer.
   it in the ZIP. Preserve pagination in compact voice output.
 - `doctor` must work with missing SDK dependencies and credentials, never synthesize,
   and never print API keys, account details, or raw import diagnostics.
+
+- Missing-key guidance must link directly to dashboard API Keys, name the Create key
+  and Copy actions, explain environment inheritance, and resume the original task.
+  No key means connectivity is untested, not that all other setup checks passed.

@@ -233,7 +233,7 @@ def test_offline_commands_without_dependencies_or_key(monkeypatch):
             assert result.returncode == 1
 
 
-@pytest.mark.parametrize("me_status,scopes,expected", [(200, ["tts", "voices"], "ok"), (403, [], "unverified"), (200, ["voices"], "denied")])
+@pytest.mark.parametrize("me_status,scopes,expected", [(200, ["tts", "voices"], "ok"), (403, [], "unverified"), (200, ["voices"], "denied"), (200, ["service"], "ok"), (200, ["*"], "denied")])
 def test_doctor_only_reads_and_hides_account_data(monkeypatch, me_status, scopes, expected):
     monkeypatch.setenv("SAWTAK_API_KEY", "secret-test-value")
     def handler(request):
@@ -258,3 +258,14 @@ def test_doctor_network_error(monkeypatch):
     result = helper.doctor()
     assert result["checks"]["connectivity"] == "failed"
     assert "private diagnostics" not in json.dumps(result)
+
+
+def test_missing_key_doctor_gives_next_steps_without_network(monkeypatch):
+    monkeypatch.delenv("SAWTAK_API_KEY", raising=False)
+    monkeypatch.setattr(helper, "make_client", lambda: pytest.fail("Missing key must not call API"))
+    result = helper.doctor()
+    assert result["checks"]["connectivity"] == "not_checked"
+    assert not result["ok"]
+    assert "https://sawtakarabi.ai/dashboard/api-keys" in result["next_steps"][0]
+    assert "Create key" in result["next_steps"][0]
+    assert "https://sawtakarabi.ai/docs/authentication" in result["next_steps"][0]

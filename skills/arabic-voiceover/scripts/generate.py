@@ -35,12 +35,19 @@ def dependency_hint():
 
 BASE_URL = "https://api.sawtakarabi.ai/v1"
 SAMPLE_RATE = 24000
+KEY_SETUP = (
+    "Open https://sawtakarabi.ai/dashboard/api-keys, sign in or create an account, "
+    "click Create key, enter a name, and copy the key shown once. Configure SAWTAK_API_KEY "
+    "using your agent's secret settings or a hidden terminal prompt, then launch the agent "
+    "from that terminal. Do not paste the key into chat. Setup steps: "
+    "https://sawtakarabi.ai/docs/authentication. Once configured, rerun doctor and continue the original task."
+)
 
 
 def make_client():
     key = os.environ.get("SAWTAK_API_KEY", "").strip()
     if not key:
-        raise ValueError("Create an API key in your Sawtak dashboard and set SAWTAK_API_KEY in your environment.")
+        raise ValueError(KEY_SETUP)
     base = os.environ.get("SAWTAK_API_BASE_URL", BASE_URL).rstrip("/")
     parsed = urlparse(base)
     if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
@@ -102,7 +109,9 @@ def doctor():
     except Exception:
         checks["hashing"] = "failed"
     if IMPORT_ERROR:
-        return {"checks": checks, "hint": dependency_hint(), "ok": False}
+        return {"checks": checks, "hint": dependency_hint(), "next_steps": [KEY_SETUP] if checks["credentials"] == "missing" else [], "ok": False}
+    if checks["credentials"] == "missing":
+        return {"checks": checks, "ok": False, "hint": "API connectivity and permissions have not been checked because no key is configured.", "next_steps": [KEY_SETUP]}
     if checks["credentials"] == "present":
         try:
             with make_client() as client:
@@ -116,7 +125,7 @@ def doctor():
                     account = client.get("/me", cast_to=object)
                     scopes = account.get("key", {}).get("scopes")
                     if isinstance(scopes, list):
-                        checks["speech_access"] = "ok" if not scopes or "tts" in scopes or "*" in scopes else "denied"
+                        checks["speech_access"] = "ok" if not scopes or "tts" in scopes or "service" in scopes else "denied"
                 except APIStatusError:
                     pass  # Account inspection permission is not required for synthesis.
         except (APIConnectionError, httpx.TransportError):
@@ -283,7 +292,7 @@ def main(argv=None):
         error = body.get("error", body)
         code = error.get("code", "api_error") if isinstance(error, dict) else "api_error"
         hints = {
-            401: "Check SAWTAK_API_KEY.", 403: "Access denied. Check your API key in the Sawtak dashboard.",
+            401: "The configured key was rejected. " + KEY_SETUP, 403: "Access denied. Check your API key in the Sawtak dashboard.",
             402: "Check your Sawtak balance.", 409: "This request ID was already used. Audio is not replayed; do not automatically generate again.",
             429: "Rate limited; no automatic retry was made.", 503: "Service unavailable; no automatic retry was made.",
         }

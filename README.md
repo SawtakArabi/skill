@@ -12,7 +12,7 @@ npx skills add SawtakArabi/skill --skill arabic-voiceover -g -a claude-code -a c
 
 ## Setup
 
-Create an API key in your [Sawtak dashboard](https://sawtakarabi.ai), then set `SAWTAK_API_KEY` in your agent’s environment. Speech generation uses your Sawtak balance.
+Open [API Keys](https://sawtakarabi.ai/dashboard/api-keys), sign in, click **Create key**, give it a name, and copy the key shown once. Follow [Authentication](https://sawtakarabi.ai/docs/authentication) to configure `SAWTAK_API_KEY`, then launch your agent from that environment. Do not paste the key into chat. Speech generation uses your Sawtak Arabi balance; top up in [Billing](https://sawtakarabi.ai/dashboard/billing) if needed.
 
 Install the Python packages in [requirements.txt](skills/arabic-voiceover/requirements.txt). Your agent can do this when setting up the skill.
 
