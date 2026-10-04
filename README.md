@@ -11,7 +11,7 @@ The skill helps your agent select an available voice, generate narration, measur
 Use the existing [Vercel Skills CLI](https://github.com/vercel-labs/skills):
 
 ```bash
-npx skills add mohammed-bahumaish/sawtak-skills --skill arabic-voiceover -g -a claude-code -a codex
+npx skills add SawtakArabi/sawtak-skills --skill arabic-voiceover -g -a claude-code -a codex
 ```
 
 Or clone this repository and copy `skills/arabic-voiceover` to:
@@ -63,7 +63,7 @@ The command returns JSON with the path, measured duration, voice, and request id
 
 ## Claude chat and Cowork
 
-Download `arabic-voiceover.zip` from this repository's releases and upload it through **Customize → Skills**. The ZIP has the same skill used by the coding agents.
+Download [arabic-voiceover.zip](https://github.com/SawtakArabi/sawtak-skills/releases/latest/download/arabic-voiceover.zip) and upload it through **Customize → Skills**. The ZIP has the same skill used by the coding agents.
 
 **Hosted execution is not yet verified.** The host must provide Python dependencies, access to `api.sawtakarabi.ai`, and secure API-key configuration. ZIP installation alone does not provide these. If the host cannot supply them, use Claude Code or Codex with the local setup above. Do not paste an API key into a conversation as a workaround.
 
