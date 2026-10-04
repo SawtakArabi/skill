@@ -30,7 +30,7 @@ SAMPLE_RATE = 24000
 def make_client():
     key = os.environ.get("SAWTAK_API_KEY", "").strip()
     if not key:
-        raise ValueError("Set SAWTAK_API_KEY in the agent's environment (tts and voices scopes).")
+        raise ValueError("Create an API key in your Sawtak dashboard and set SAWTAK_API_KEY in your environment.")
     base = os.environ.get("SAWTAK_API_BASE_URL", BASE_URL).rstrip("/")
     parsed = urlparse(base)
     if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
@@ -85,7 +85,7 @@ def generate(client, args):
                     total += len(chunk)
                     wav.writeframesraw(chunk)
             if not total or total % 2:
-                raise ValueError("Empty or incomplete PCM response; no audio saved. Check generation history before retrying.")
+                raise ValueError("Empty or incomplete PCM response; no audio saved. API audio cannot be retrieved later. Do not automatically generate again.")
         # Publish only after a completed stream; never overwrite an existing recording.
         os.link(temporary, output)
     finally:
@@ -127,14 +127,14 @@ def main(argv=None):
         error = body.get("error", body)
         code = error.get("code", "api_error") if isinstance(error, dict) else "api_error"
         hints = {
-            401: "Check SAWTAK_API_KEY.", 403: "Check API key scopes and account access.",
-            402: "Check your Sawtak balance.", 409: "This request ID was already used; check generation history. Do not blindly create another request.",
+            401: "Check SAWTAK_API_KEY.", 403: "Access denied. Check your API key in the Sawtak dashboard.",
+            402: "Check your Sawtak balance.", 409: "This request ID was already used. Audio is not replayed; do not automatically generate again.",
             429: "Rate limited; no automatic retry was made.", 503: "Service unavailable; no automatic retry was made.",
         }
         print(json.dumps({"error": code, "status": exc.status_code, "operation_id": exc.request_id,
-                          "hint": hints.get(exc.status_code, "Check generation history before retrying.")}), file=sys.stderr)
+                          "hint": hints.get(exc.status_code, "API audio cannot be retrieved later. Do not automatically generate again.")}), file=sys.stderr)
     except (APIConnectionError, httpx.TransportError):
-        print("Connection or stream interrupted. No automatic retry was made. Check generation history before another paid request.", file=sys.stderr)
+        print("Connection or stream interrupted. No automatic retry was made. The outcome is uncertain and API audio cannot be retrieved later. Ask before another paid generation.", file=sys.stderr)
     except (OSError, ValueError, wave.Error) as exc:
         print(str(exc), file=sys.stderr)
     return 1
