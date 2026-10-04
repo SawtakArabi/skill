@@ -4,6 +4,8 @@ Arabic voiceovers for Claude Code and Codex, powered by [Sawtak Arabi](https://s
 
 ## Install
 
+Requires Node.js/npm for the installer and Python 3.10+ for generation.
+
 ```bash
 npx skills add SawtakArabi/skill --skill arabic-voiceover -g -a claude-code -a codex
 ```
@@ -12,7 +14,7 @@ npx skills add SawtakArabi/skill --skill arabic-voiceover -g -a claude-code -a c
 
 Create a [Sawtak API key](https://sawtakarabi.ai) with `tts` and `voices` access, then set `SAWTAK_API_KEY` in your agent’s environment. Speech generation uses your Sawtak balance.
 
-Requires Python 3.10+ and the packages in [requirements.txt](skills/arabic-voiceover/requirements.txt). Your agent can install these when setting up the skill.
+Install the Python packages in [requirements.txt](skills/arabic-voiceover/requirements.txt). Your agent can do this when setting up the skill.
 
 ## Usage
 

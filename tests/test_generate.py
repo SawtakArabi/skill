@@ -1,6 +1,8 @@
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
+import sys
 import wave
 
 import httpx
@@ -121,3 +123,12 @@ def test_client_disables_sdk_retries(monkeypatch):
     with helper.make_client() as sdk:
         assert sdk.max_retries == 0
         assert str(sdk.base_url) == helper.BASE_URL + "/"
+
+
+def test_missing_dependencies_shows_install_command():
+    result = subprocess.run([sys.executable, "-S", str(SCRIPT), "voices"], capture_output=True, text=True)
+    assert result.returncode == 1
+    assert "Missing Python dependencies" in result.stderr
+    assert "-m pip install -r" in result.stderr
+    assert str(SCRIPT.parents[1] / "requirements.txt") in result.stderr
+    assert "Traceback" not in result.stderr

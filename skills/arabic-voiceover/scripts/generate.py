@@ -5,14 +5,22 @@ import argparse
 import json
 import os
 from pathlib import Path
+import shlex
 import sys
 import tempfile
 from urllib.parse import urlencode, urlparse
 import uuid
 import wave
 
-import httpx
-from openai import APIConnectionError, APIStatusError, OpenAI
+try:
+    import httpx
+    from openai import APIConnectionError, APIStatusError, OpenAI
+except ModuleNotFoundError:
+    requirements = Path(__file__).resolve().parents[1] / "requirements.txt"
+    raise SystemExit(
+        "Missing Python dependencies. Install them in your Python environment:\n"
+        f"{shlex.quote(sys.executable)} -m pip install -r {shlex.quote(str(requirements))}"
+    ) from None
 
 
 BASE_URL = "https://api.sawtakarabi.ai/v1"
