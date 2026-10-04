@@ -6,7 +6,9 @@ Python SDK and standard Agent Skills packaging. Do not create another SDK,
 installer, speech engine, or video renderer.
 
 - The speech helper connects to Sawtak, not OpenAI. Keep automatic paid-request
-  retries disabled. Do not overwrite completed audio.
+  retries disabled. Do not overwrite completed audio or metadata. Save identifiers
+  and settings beside the output; interrupted audio stays explicitly partial.
+  Operation inspection reads status/billing only, never recovers or regenerates audio.
 - Never commit keys, private account metadata, generated media, or environments.
 - Keep `scripts/package.py`'s file allowlist current when adding skill resources.
 - Run `python3 -m pytest tests -q` after client changes and build the ZIP with

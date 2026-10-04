@@ -35,7 +35,17 @@ The helper uses the official OpenAI SDK against Sawtak, receives 24 kHz mono 16-
 
 For long work or an uncertain voice choice, start with a short representative passage; reuse it in the final narration where practical. Do not require a separate paid preview for every short clip. Split longer scripts at scene/sentence boundaries (API limit: 10,000 characters per request, 400 per word). Generate sequentially, keeping successful scenes. Do not add unsupported emotion tags, SSML, speed parameters, or word timestamp claims. Pronunciation enhancement is opt-in with `--enhance-pronunciation`; do not assume it improves dialectal text.
 
-No automatic retries are made. On timeout, interrupted audio, or duplicate request, preserve the printed request ID and report the uncertain outcome. API audio is not stored for later recovery. Do not start another paid generation without an explicit user request. Reusing `--request-id` prevents duplicate work but a duplicate returns HTTP 409, not a replay of the audio. Do not switch speech providers silently after an error.
+The helper manages request identifiers automatically and saves them with voice, settings, output path, and local completion state in `scene-01.json`. It emits the `idempotency_key` before submission and the `operation_id` (the server's `X-Request-Id`) immediately after receiving headers. Do not ask users to choose these IDs or include them in routine success summaries.
+
+On interruption, any received complete PCM frames remain in `scene-01.partial.wav`. This is incomplete narration, even if the WAV plays. The helper does not overwrite existing audio or metadata and never automatically regenerates. Forced termination or disk failure can prevent cleanup or metadata updates; a `started` or `streaming` record is not proof of completion.
+
+To check an uncertain outcome, read `operation_id` from the JSON and run:
+
+```bash
+python3 <skill-dir>/scripts/generate.py inspect <operation-id>
+```
+
+This reads operation state and billing without synthesizing. It cannot recover audio. A missing operation is **unknown**, not evidence that generation failed or was free. If no operation ID was received, report that status cannot be checked. Ask before another paid generation. `--idempotency-key` is optional (`--request-id` remains an alias); duplicate submissions return HTTP 409, not audio replay. The gateway may accept the key again when an earlier operation ended unsuccessfully without a charge. Do not switch speech providers silently after an error.
 
 ## Finish the user's deliverable
 

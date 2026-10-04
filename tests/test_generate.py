@@ -86,12 +86,15 @@ class Interrupted(httpx.SyncByteStream):
         raise httpx.ReadError("stream lost")
 
 
-def test_interrupted_stream_is_not_published(args):
+def test_interrupted_stream_preserves_partial_audio(args):
     with client(lambda r: httpx.Response(200, headers={"content-type": "audio/pcm"}, stream=Interrupted())) as sdk:
         with pytest.raises(httpx.ReadError):
             helper.generate(sdk, args)
     assert not args.output.exists()
-    assert not list(args.output.parent.glob("*.partial"))
+    with wave.open(str(args.output.with_suffix(".partial.wav"))) as wav:
+        assert wav.getnframes() == 100
+    metadata = json.loads(args.output.with_suffix(".json").read_text())
+    assert metadata["state"] == "incomplete"
 
 
 @pytest.mark.parametrize("content,content_type", [(b"", "audio/pcm"), (b"x", "audio/pcm"), (b"{}", "application/json")])
@@ -132,3 +135,61 @@ def test_missing_dependencies_shows_install_command():
     assert "-m pip install -r" in result.stderr
     assert str(SCRIPT.parents[1] / "requirements.txt") in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_ids_saved_before_stream_and_status_never_resynthesizes(args, capsys):
+    requests = []
+    class CheckedStream(httpx.SyncByteStream):
+        def __iter__(self):
+            saved = json.loads(args.output.with_suffix(".json").read_text())
+            assert saved["operation_id"] == "op-1"
+            assert saved["idempotency_key"] == "scene-1"
+            assert saved["settings"]["enhance_pronunciation"] is False
+            assert "generation_headers" in capsys.readouterr().err
+            yield b"\x01\x00x"
+            raise httpx.ReadError("lost")
+    def handler(request):
+        requests.append(request.method)
+        if request.method == "GET":
+            assert request.url.path == "/v1/operations/op-1"
+            return httpx.Response(200, json={"id": "op-1", "state": "terminal", "charged_micros": 100})
+        saved = json.loads(args.output.with_suffix(".json").read_text())
+        assert saved["state"] == "started"
+        return httpx.Response(200, headers={"content-type": "audio/pcm", "x-request-id": "op-1"}, stream=CheckedStream())
+    with client(handler) as sdk:
+        with pytest.raises(httpx.ReadError):
+            helper.generate(sdk, args)
+        status = helper.inspect_operation(sdk, helper.parser().parse_args(["inspect", "op-1"]))
+    assert requests == ["POST", "GET"]
+    assert status["charged_micros"] == 100
+    with wave.open(str(args.output.with_suffix(".partial.wav"))) as wav:
+        assert wav.getnframes() == 1
+    assert not args.output.exists()
+
+
+def test_missing_operation_is_unknown():
+    with client(lambda r: httpx.Response(404, json={"error": {"message": "missing"}})) as sdk:
+        result = helper.inspect_operation(sdk, helper.parser().parse_args(["inspect", "missing"]))
+    assert result["state"] == "unknown"
+
+
+def test_metadata_prevents_reusing_failed_output(args):
+    args.output.with_suffix(".json").write_text("existing metadata")
+    with client(lambda r: pytest.fail("Must not generate")) as sdk:
+        with pytest.raises(ValueError, match="already exists"):
+            helper.generate(sdk, args)
+
+
+def test_keyboard_interrupt_keeps_audio_and_ids(args):
+    class Stopped(httpx.SyncByteStream):
+        def __iter__(self):
+            yield b"\x01\x00"
+            raise KeyboardInterrupt()
+    with client(lambda r: httpx.Response(200, headers={"content-type": "audio/pcm", "x-request-id": "op-stop"}, stream=Stopped())) as sdk:
+        with pytest.raises(KeyboardInterrupt):
+            helper.generate(sdk, args)
+    saved = json.loads(args.output.with_suffix(".json").read_text())
+    assert saved["operation_id"] == "op-stop"
+    assert saved["state"] == "incomplete"
+    with wave.open(saved["partial_path"]) as wav:
+        assert wav.getnframes() == 1

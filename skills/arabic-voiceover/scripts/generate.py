@@ -8,7 +8,7 @@ from pathlib import Path
 import shlex
 import sys
 import tempfile
-from urllib.parse import urlencode, urlparse
+from urllib.parse import quote, urlencode, urlparse
 import uuid
 import wave
 
@@ -55,26 +55,54 @@ def generate(client, args):
     output = args.output.expanduser().absolute()
     if output.suffix.lower() != ".wav":
         raise ValueError("Output must have a .wav extension.")
-    if output.exists() or output.is_symlink():
-        raise ValueError(f"Output already exists: {output}. Reuse it or choose a new filename.")
-    request_id = args.request_id or str(uuid.uuid4())
-    if not 1 <= len(request_id) <= 128 or any(ord(c) < 33 or ord(c) > 126 for c in request_id):
-        raise ValueError("Request ID must be 1–128 printable ASCII characters without spaces.")
+    partial = output.with_suffix(".partial.wav")
+    metadata_path = output.with_suffix(".json")
+    for path in (output, partial, metadata_path):
+        if path.exists() or path.is_symlink():
+            raise ValueError(f"Output already exists: {path}. Reuse it or choose a new filename.")
+    key = args.idempotency_key or str(uuid.uuid4())
+    if not 1 <= len(key) <= 128 or any(ord(c) < 33 or ord(c) > 126 for c in key):
+        raise ValueError("Idempotency key must be 1–128 printable ASCII characters without spaces.")
     output.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary = tempfile.mkstemp(prefix=f".{output.name}.", suffix=".partial", dir=output.parent)
+    metadata = {
+        "idempotency_key": key, "operation_id": None,
+        "voice": args.voice, "path": str(output), "partial_path": None,
+        "state": "started", "characters": len(text),
+        "settings": {"model": "arabic-tts-1", "response_format": "pcm",
+                     "sample_rate": SAMPLE_RATE, "enhance_pronunciation": args.enhance_pronunciation},
+    }
+    # Exclusive creation also prevents two invocations from claiming the same output.
+    with metadata_path.open("x", encoding="utf-8") as record:
+        json.dump(metadata, record, ensure_ascii=False, indent=2)
+
+    def save(event):
+        fd, name = tempfile.mkstemp(dir=output.parent, prefix=".generation-", suffix=".json")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as record:
+                json.dump(metadata, record, ensure_ascii=False, indent=2)
+            os.replace(name, metadata_path)
+        finally:
+            Path(name).unlink(missing_ok=True)
+        print(json.dumps({"event": event, **metadata}), file=sys.stderr, flush=True)
+
+    save("generation_started")
     total = 0
-    operation_id = None
-    print(json.dumps({"event": "generation_started", "request_id": request_id}), file=sys.stderr, flush=True)
+    pending = b""
+    owns_partial = False
     try:
-        with os.fdopen(fd, "wb") as raw, wave.open(raw, "wb") as wav:
+        raw = partial.open("xb")
+        owns_partial = True
+        with raw, wave.open(raw, "wb") as wav:
             wav.setparams((1, 2, SAMPLE_RATE, 0, "NONE", "not compressed"))
             with client.audio.speech.with_streaming_response.create(
                 model="arabic-tts-1", voice=args.voice, input=text,
                 response_format="pcm",
                 extra_body={"sample_rate": SAMPLE_RATE, "enhance_pronunciation": args.enhance_pronunciation},
-                extra_headers={"Idempotency-Key": request_id},
+                extra_headers={"Idempotency-Key": key},
             ) as response:
-                operation_id = response.headers.get("x-request-id")
+                metadata["operation_id"] = response.headers.get("x-request-id")
+                metadata["state"] = "streaming"
+                save("generation_headers")
                 content_type = response.headers.get("content-type", "").split(";")[0]
                 if content_type != "audio/pcm":
                     raise ValueError(f"Expected audio/pcm, received {content_type!r}; no audio saved.")
@@ -82,19 +110,46 @@ def generate(client, args):
                 if rate is not None and rate != str(SAMPLE_RATE):
                     raise ValueError("Unexpected sample rate; no audio saved.")
                 for chunk in response.iter_bytes():
-                    total += len(chunk)
-                    wav.writeframesraw(chunk)
-            if not total or total % 2:
-                raise ValueError("Empty or incomplete PCM response; no audio saved. API audio cannot be retrieved later. Do not automatically generate again.")
-        # Publish only after a completed stream; never overwrite an existing recording.
-        os.link(temporary, output)
-    finally:
-        Path(temporary).unlink(missing_ok=True)
-    return {
-        "path": str(output), "duration_seconds": total / (SAMPLE_RATE * 2),
-        "sample_rate": SAMPLE_RATE, "channels": 1, "voice": args.voice,
-        "characters": len(text), "request_id": request_id, "operation_id": operation_id,
-    }
+                    pending += chunk
+                    size = len(pending) - len(pending) % 2
+                    if size:
+                        wav.writeframes(pending[:size])
+                        raw.flush()
+                        total += size
+                        pending = pending[size:]
+            if not total or pending:
+                raise ValueError("Empty or incomplete PCM response. Do not automatically generate again.")
+        # Only a completed stream becomes the requested file; never overwrite audio.
+        os.link(partial, output)
+    except (Exception, KeyboardInterrupt) as exc:
+        if isinstance(exc, APIStatusError):
+            # Only a duplicate response identifies an existing operation. Other error
+            # request IDs may be tracing IDs, not operation IDs.
+            body = exc.body if isinstance(exc.body, dict) else {}
+            if exc.status_code == 409 and body.get("operation_id"):
+                metadata["operation_id"] = body["operation_id"]
+            metadata["http_status"] = exc.status_code
+        metadata["state"] = "incomplete" if total else "unknown"
+        metadata["partial_path"] = str(partial) if total else None
+        metadata["duration_seconds"] = total / (SAMPLE_RATE * 2)
+        if not total and owns_partial:
+            partial.unlink(missing_ok=True)
+        save("generation_incomplete")
+        raise
+    partial.unlink()
+    metadata.update(state="completed", duration_seconds=total / (SAMPLE_RATE * 2))
+    save("generation_completed")
+    return {**metadata, "metadata_path": str(metadata_path), "sample_rate": SAMPLE_RATE, "channels": 1}
+
+
+def inspect_operation(client, args):
+    try:
+        return client.get("/operations/" + quote(args.operation_id, safe=""), cast_to=object)
+    except APIStatusError as exc:
+        if exc.status_code != 404:
+            raise
+        return {"id": args.operation_id, "state": "unknown",
+                "hint": "Operation not found. This does not prove failure or authorize another generation."}
 
 
 def parser():
@@ -110,8 +165,10 @@ def parser():
     speech.add_argument("--voice", required=True, help="Ready voice ID from the catalog")
     speech.add_argument("--text-file", type=Path, required=True, help="UTF-8 narration script")
     speech.add_argument("--output", type=Path, required=True, help="New WAV path; existing files are never overwritten")
-    speech.add_argument("--request-id", help="Idempotency key; generated and printed if omitted")
+    speech.add_argument("--idempotency-key", "--request-id", dest="idempotency_key", help="Optional duplicate-protection key; managed automatically if omitted")
     speech.add_argument("--enhance-pronunciation", action="store_true", help="Opt into Sawtak tashkeel; off by default")
+    inspect = sub.add_parser("inspect", help="Check operation status and billing; does not generate or download audio")
+    inspect.add_argument("operation_id", help="Operation ID from saved metadata")
     return cli
 
 
@@ -119,7 +176,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         with make_client() as client:
-            result = list_voices(client, args) if args.command == "voices" else generate(client, args)
+            result = {"voices": list_voices, "generate": generate, "inspect": inspect_operation}[args.command](client, args)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
     except APIStatusError as exc:
@@ -131,10 +188,13 @@ def main(argv=None):
             402: "Check your Sawtak balance.", 409: "This request ID was already used. Audio is not replayed; do not automatically generate again.",
             429: "Rate limited; no automatic retry was made.", 503: "Service unavailable; no automatic retry was made.",
         }
-        print(json.dumps({"error": code, "status": exc.status_code, "operation_id": exc.request_id,
+        print(json.dumps({"error": code, "status": exc.status_code, "server_request_id": exc.request_id,
                           "hint": hints.get(exc.status_code, "API audio cannot be retrieved later. Do not automatically generate again.")}), file=sys.stderr)
     except (APIConnectionError, httpx.TransportError):
         print("Connection or stream interrupted. No automatic retry was made. The outcome is uncertain and API audio cannot be retrieved later. Ask before another paid generation.", file=sys.stderr)
+    except KeyboardInterrupt:
+        print("Interrupted. Check saved metadata and any partial audio before another generation.", file=sys.stderr)
+        return 130
     except (OSError, ValueError, wave.Error) as exc:
         print(str(exc), file=sys.stderr)
     return 1
